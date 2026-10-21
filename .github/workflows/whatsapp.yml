@@ -1,4 +1,3 @@
-
 name: Gold WhatsApp Session Alert
 
 on:
@@ -19,13 +18,12 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Twilio
-        run: pip install twilio
+      - name: Install Requests
+        run: pip install requests
 
       - name: Run WhatsApp Script
         env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_WHATSAPP_NUMBER: ${{ secrets.TWILIO_WHATSAPP_NUMBER }}
+          GREEN_ID_INSTANCE: ${{ secrets.GREEN_ID_INSTANCE }}
+          GREEN_API_TOKEN: ${{ secrets.GREEN_API_TOKEN }}
           MY_WHATSAPP_NUMBER: ${{ secrets.MY_WHATSAPP_NUMBER }}
         run: python gold_whatsapp_alert.py
