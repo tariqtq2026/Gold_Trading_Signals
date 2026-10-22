@@ -18,24 +18,17 @@ ASSETS = {
 
 def fetch_economic_news():
     """
-    Forex Factory ya public economic calendar API se high-impact news check karna.
+    Forex Factory / Public economic calendar API se high-impact news check karna.
     """
     try:
-        # Free public economic calendar feed
-        url = "nfs.faireconomy.media_calendar_thisweek.json" # Placeholder for reliable feed or public API endpoint
-        # Alternative: checking high-impact windows or fetching from a clean JSON source
         response = requests.get("https://nfs.faireconomy.cc/calendar.json", timeout=5)
         if response.status_code == 200:
             events = response.json()
-            current_utc = datetime.datetime.utcnow()
             high_impact_today = False
-            
             for event in events:
                 if event.get("impact") == "High":
-                    date_str = event.get("date")
-                    # Parse event date and check if it's happening within the next few hours
-                    # For safety, we flag high impact news days/times
                     high_impact_today = True
+                    break
             return high_impact_today
     except Exception as e:
         print(f"News fetch warning: {e}")
@@ -102,63 +95,69 @@ def fetch_market_data(ticker):
         return None
 
 def generate_alert_message(name, data, has_news):
+    # PKT Timezone (+5 Hours)
     current_time = (datetime.datetime.utcnow() + datetime.timedelta(hours=5)).strftime("%I:%M %p")
     
-    news_warning = "⚠️ *High-Impact News Alert Today! Trade with extra caution.* 📰\n\n" if has_news else ""
+    news_warning = "⚠️ *High-Impact News Alert Today! Extra care ke sath trade karein.* 📰\n\n" if has_news else ""
 
     if not data:
-        return f"⚠️ *{name} MARKET MONITOR* ⚠️\nData fetch failed."
+        return f"⚠️ *{name} MARKET MONITOR* ⚠️\nData fetch nahi ho saka."
 
     price = data["current_price"]
     high = data["session_high"]
     low = data["session_low"]
 
+    # --- STRONG SELL SETUP ---
     if data["sweep_buyside"] and (data["bearish_fvg"] or data["strong_displacement"]) and data["vsa_spike"]:
         sl = round(high * 1.0015, 4)
         tp = round(price - ((high - low) * 0.6), 4)
         return (
-            f"🚨 *{name} INSTITUTIONAL SELL SETUP* 🚨\n\n"
+            f"🚨 *{name} STRONG SELL SETUP* 🚨\n\n"
             f"{news_warning}"
             f"⏰ *Time:* {current_time} PKT\n"
-            f"📍 *Confluences Verified (3/3):*\n"
+            f"📍 *Confirmations Verified (3/3):*\n"
             f"1️⃣ Buyside Liquidity Swept ({high})\n"
-            f"2️⃣ Institutional Displacement / FVG Created 📉\n"
-            f"3️⃣ VSA Absorption Volume Spike Confirmed 💥\n\n"
+            f"2️⃣ Institutional Move / FVG Created 📉\n"
+            f"3️⃣ High Volume Spike Confirmed 💥\n\n"
             f"🎯 *Proposed Trade:*\n"
-            f"- Bias: **SHORT / SELL**\n"
+            f"- Trade: **SHORT / SELL**\n"
             f"- Entry Price: {price}\n"
             f"- Stop Loss: {sl}\n"
             f"- Take Profit: {tp}\n\n"
-            f"⚠️ *Note:* Manual execution only upon candle close."
+            f"⚠️ *Note:* Candle close hone par manual entry karein."
         )
 
+    # --- STRONG BUY SETUP ---
     elif data["sweep_sellside"] and (data["bullish_fvg"] or data["strong_displacement"]) and data["vsa_spike"]:
         sl = round(low * 0.9985, 4)
         tp = round(price + ((high - low) * 0.6), 4)
         return (
-            f"🚨 *{name} INSTITUTIONAL BUY SETUP* 🚨\n\n"
+            f"🚨 *{name} STRONG BUY SETUP* 🚨\n\n"
             f"{news_warning}"
             f"⏰ *Time:* {current_time} PKT\n"
-            f"📍 *Confluences Verified (3/3):*\n"
+            f"📍 *Confirmations Verified (3/3):*\n"
             f"1️⃣ Sellside Liquidity Swept ({low})\n"
-            f"2️⃣ Institutional Displacement / FVG Created 📈\n"
-            f"3️⃣ VSA Accumulation Volume Spike Confirmed 💥\n\n"
+            f"2️⃣ Institutional Move / FVG Created 📈\n"
+            f"3️⃣ High Volume Spike Confirmed 💥\n\n"
             f"🎯 *Proposed Trade:*\n"
-            f"- Bias: **LONG / BUY**\n"
+            f"- Trade: **LONG / BUY**\n"
             f"- Entry Price: {price}\n"
             f"- Stop Loss: {sl}\n"
             f"- Take Profit: {tp}\n\n"
-            f"⚠️ *Note:* Manual execution only upon candle close."
+            f"⚠️ *Note:* Candle close hone par manual entry karein."
         )
 
+    # --- NO SETUP / RANGE STATUS ---
     else:
         return (
             f"ℹ️ *{name} SESSION STATUS* ℹ️\n\n"
             f"{news_warning}"
             f"⏰ *Time:* {current_time} PKT\n"
-            f"📌 *NO HIGH-PROBABILITY SETUP*\n"
-            f"Institutional confluences missing. Market in range ({low} - {high}).\n"
-            f"Current Price: {price}"
+            f"📌 *Filhal Koi Behtreen Trade Nahi Mil Rahi!*\n\n"
+            f"Market range mein hai aur strong entry confirmation missing hai.\n"
+            f"- Range: {low} - {high}\n"
+            f"- Current Price: {price}\n\n"
+            f"Jab koi strong setup banega, alert aa jayega."
         )
 
 def run_bot():
