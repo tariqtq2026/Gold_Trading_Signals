@@ -98,7 +98,7 @@ def generate_alert_message(data):
             f"⏰ *Time:* {current_time} PKT\n\n"
             f"📌 *NO SETUP:* Low volume / Consolidation in range ({low} - {high}).\n"
             f"Current Price: {price}\n\n"
-            f"⏳ *Script will continue monitoring till 08:30 PM PKT.*"
+            f"⏳ *We will continue monitoring till 08:30 PM PKT.*"
         )
 
 def send_whatsapp_alert():
